@@ -1,6 +1,9 @@
 import React from 'react';
 import Carousel from 'react-bootstrap/Carousel';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import CreateBook from './CreateBook';
+
+
 
 class BestBooks extends React.Component {
   constructor(props) {
@@ -10,7 +13,6 @@ class BestBooks extends React.Component {
     }
   }
 
-  /* TODO: Make a GET request to your API to fetch all the books from the database  */
 async componentDidMount(){
     try {
         let foundBooks = await fetch(`${import.meta.env.VITE_SERVER_URL}/books`);
@@ -26,6 +28,12 @@ async componentDidMount(){
     } catch (error) {
         console.error(error.message);
     }
+}
+
+handleBookCreated = (newBook) => {
+    this.setState((prevState)=> ({
+        books: [ ...prevState.books, newBook],
+    }));
 }
   render() {
     let carouselStyle = {
@@ -43,7 +51,6 @@ async componentDidMount(){
                                 {book.img ? (
                                     <img src={book.img} alt={`Slide ${index + 1}`} />
                                 ) : (
-                                    // Use a placeholder image when img is not available
                                     <img src="https://fakeimg.pl/600x500/FFFFFF/FFFFFF" alt={`Slide ${index + 1}`} />
                                 )}
                                 <Carousel.Caption className="book-card">
@@ -57,6 +64,7 @@ async componentDidMount(){
                 ) : (
                     <h3>No Books Found</h3>
                 )}
+                <CreateBook onBookCreated= {this.handleBookCreated}/>
             </>
         );
     }
