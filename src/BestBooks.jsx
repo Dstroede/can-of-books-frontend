@@ -1,5 +1,6 @@
 import React from 'react';
 import Carousel from 'react-bootstrap/Carousel';
+import { Button }from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import CreateBook from './CreateBook';
 
@@ -9,7 +10,8 @@ class BestBooks extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      books: []
+      books: [],
+      isLoading: false,
     }
   }
 
@@ -23,10 +25,32 @@ async componentDidMount(){
             });
             console.log('Found these books:', bookData)
         }else {
-            console.error('No Books Found. Server response:', res.status )
+            console.error('No Books Found. Server response:', foundBooks.status )
         }
     } catch (error) {
         console.error(error.message);
+    }
+}
+async handleDeleteBook(bookId){
+    try {
+        this.setState({ isLoading: true })
+        console.log('Deleting books with this ID: ', bookId)
+        let deleteBook = await fetch(`${import.meta.env.VITE_SERVER_URL}/books/${bookId}`, {
+            method: 'DELETE',
+        });
+        if (deleteBook.ok) {
+            this.setState((prevState) => ({
+                books: prevState.books.filter((book) => book._id !== bookId),
+            }));
+            console.log('Book Delete Successfully');
+        }else {
+            let errorResponse = await deleteBook.json();
+            console.error('Failed to Delete Book:', deleteBook.status, errorResponse )
+        }
+    } catch (error) {
+        console.error('Error Deleting Book: ', error);
+    } finally {
+        this.setState({ isLoading: false })
     }
 }
 
@@ -57,6 +81,8 @@ handleBookCreated = (newBook) => {
                                     <h3>{book.title}</h3>
                                     <p>{book.description}</p>
                                     <p>{book.status}</p>
+                                    <Button variant='danger' onClick={() => this.handleDeleteBook(book._id)} >
+                                        Delete Book </Button>
                                 </Carousel.Caption>
                             </Carousel.Item>
                         ))}
