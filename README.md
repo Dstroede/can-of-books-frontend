@@ -86,3 +86,13 @@ Start time: 3:30pm
 Finish time: 4:50pm
 
 Actual time needed to complete: 15 min
+
+## Name of feature: Updating Books
+
+Estimate of time needed to complete: 40 min
+
+Start time: 6:15pm
+
+Finish time: 8:30pm
+
+Actual time needed to complete: 2 hrs 15 min.
