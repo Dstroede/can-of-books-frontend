@@ -9,26 +9,39 @@ import {
   Routes,
   Route
 } from "react-router-dom";
+import { Auth0Provider, useAuth0 } from '@auth0/auth0-react';
+import Welcome from './Welcome';
 
+const AuthenticatedRoute = ({ children }) => {
+  const { isAuthenticated } = useAuth0();
+  return isAuthenticated ? children : <Welcome />
+}
 class App extends React.Component {
   render() {
     return (
-      <>
+      <Auth0Provider
+        domain={import.meta.env.VITE_AUTH_DOMAIN}
+        clientId={import.meta.env.VITE_AUTH_CLIENT_ID}
+        authorizationParams={{
+          redirect_uri: window.location.origin,
+        }}
+      >
+        
         <Router>
           <Header />
           <Routes>
-            <Route 
+            <Route
               exact path="/"
-              element={<BestBooks />}
+              element={<AuthenticatedRoute><BestBooks /></AuthenticatedRoute>}
             />
-            <Route 
-            path="/about"
-            element={<Profile />}
+            <Route
+              path="/about"
+              element={<Profile />}
             />
           </Routes>
           <Footer />
         </Router>
-      </>
+      </Auth0Provider>
     )
   }
 }

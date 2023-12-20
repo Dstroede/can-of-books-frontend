@@ -4,6 +4,8 @@ import { Button }from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import CreateBook from './CreateBook';
 import EditBook from './EditBook';
+import { withAuth0 } from '@auth0/auth0-react';
+
 
 
 
@@ -14,6 +16,7 @@ class BestBooks extends React.Component {
       books: [],
       isLoading: false,
       showModal: false,
+      token: null,
       editedBook:{
         _id: '',
         title: '',
@@ -49,7 +52,14 @@ class BestBooks extends React.Component {
   }
 async componentDidMount(){
     try {
-        let foundBooks = await fetch(`${import.meta.env.VITE_SERVER_URL}/books`);
+        let res = await this.props.auth0.getIdTokenClaims();
+        const token = res.__raw;
+        console.log('This is my token :', token)
+        this.setState({ token });
+        let foundBooks = await fetch(`${import.meta.env.VITE_SERVER_URL}/books`, {
+            headers: {
+                'Authorization': `Bearer ${token}`},
+        });
         if (foundBooks.ok) {
             let bookData= await foundBooks.json();
             this.setState({
@@ -65,10 +75,15 @@ async componentDidMount(){
 }
 async handleDeleteBook(bookId){
     try {
+        let res = await this.props.auth0.getIdTokenClaims();
+        const token = res.__raw;
+        this.setState({ token });
         this.setState({ isLoading: true })
         console.log('Deleting books with this ID: ', bookId)
         let deleteBook = await fetch(`${import.meta.env.VITE_SERVER_URL}/books/${bookId}`, {
             method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`},
         });
         if (deleteBook.ok) {
             this.setState((prevState) => ({
@@ -90,15 +105,19 @@ handleEditSubmit = async (updatedBook) => {
     try {
       const { _id, title, description, status } = updatedBook;
       const updatedBookData = { title, description, status };
+      let res = await this.props.auth0.getIdTokenClaims();
+      const token = res.__raw;
+      this.setState({ token });
   
-      let res = await fetch(`${import.meta.env.VITE_SERVER_URL}/books/${_id}`, {
+      let response = await fetch(`${import.meta.env.VITE_SERVER_URL}/books/${_id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-        },
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
         body: JSON.stringify(updatedBookData),
       });
-        if (res.ok) {
+        if (response.ok) {
             const updatedBookData = await res.json();
             this.setState((prevState) => ({
                 books: prevState.books.map((book) => 
@@ -109,7 +128,7 @@ handleEditSubmit = async (updatedBook) => {
             }));
             this.handleCloseModal();
         }else {
-            console.error('BestBooks.jsx- Failed to Update Book:', res.status )
+            console.error('BestBooks.jsx- Failed to Update Book:', response.status )
         }
     } catch (error) {
         console.error('BestBooks.jsx- Error Updating Book: ', error);
@@ -121,50 +140,59 @@ handleBookCreated = (newBook) => {
         books: [ ...prevState.books, newBook],
     }));
 }
-  render() {
+render() {
     let carouselStyle = {
-        margin: '2rem',
-    }
+      margin: '2rem',
+    };
 
-        return (
-            <>
-                <h2>My Essential Lifelong Learning &amp; Formation Shelf</h2>
+    return (
+      <>
+      {this.props.auth0.isAuthenticated ? (
+        <>
+            <h3>My Essential Lifelong Learning &amp; Formation Shelf</h3>
 
-                {this.state.books.length > 0 ? (
-                    <Carousel style= {carouselStyle} data-bs-theme="dark">
-                        {this.state.books.map((book, index) => (
-                            <Carousel.Item key={index}>
-                                {book.img ? (
-                                    <img src={book.img} alt={`Slide ${index + 1}`} />
-                                ) : (
-                                    <img src="https://fakeimg.pl/600x500/FFFFFF/FFFFFF" alt={`Slide ${index + 1}`} />
-                                )}
-                                <Carousel.Caption className="book-card">
-                                    <h3>{book.title}</h3>
-                                    <p>{book.description}</p>
-                                    <p>{book.status}</p>
-                                    <Button variant='danger' onClick={() => this.handleDeleteBook(book._id)} >
-                                        Delete Book </Button>
-                                        <Button variant='secondary' onClick={() => this.handleEditBook(book)} >
-                                        Edit Book </Button>
-                                </Carousel.Caption>
-                            </Carousel.Item>
-                        ))}
-                    </Carousel>
-                ) : (
-                    <h3>No Books Found</h3>
-                )}
-                <CreateBook onBookCreated= {this.handleBookCreated}/>
-                {this.state.showModal && (
-                <EditBook 
-                  showModal={this.state.showModal}
-                  handleCloseModal={this.handleCloseModal}
-                  editedBook={this.state.editedBook}
-                  handleEditSubmit={this.handleEditSubmit}/>
-                  )}
+            {this.state.books.length > 0 ? (
+              <Carousel style={carouselStyle} data-bs-theme="dark">
+                {this.state.books.map((book, index) => (
+                  <Carousel.Item key={index}>
+                    {book.img ? (
+                      <img src={book.img} alt={`Slide ${index + 1}`} />
+                    ) : (
+                      <img src="https://fakeimg.pl/600x500/FFFFFF/FFFFFF" alt={`Slide ${index + 1}`} />
+                    )}
+                    <Carousel.Caption className="book-card">
+                      <h3>{book.title}</h3>
+                      <p>{book.description}</p>
+                      <p>{book.status}</p>
+                      <Button variant="danger" onClick={() => this.handleDeleteBook(book._id)}>
+                        Delete Book
+                      </Button>
+                      <Button variant="secondary" onClick={() => this.handleEditBook(book)}>
+                        Edit Book
+                      </Button>
+                    </Carousel.Caption>
+                  </Carousel.Item>
+                ))}
+              </Carousel>
+            ) : (
+              <h3>No Books Found</h3>
+            )}
+            <CreateBook onBookCreated={this.handleBookCreated} />
+            {this.state.showModal && (
+              <EditBook
+                showModal={this.state.showModal}
+                handleCloseModal={this.handleCloseModal}
+                editedBook={this.state.editedBook}
+                handleEditSubmit={this.handleEditSubmit}
+              />
+            )}
             </>
-        );
-    }
+            ): (
+                <h2> Please Log In To View and Add Books</h2>
+            )}
+      </>
+    );
+  }
 }
 
-export default BestBooks;
+export default withAuth0(BestBooks);
