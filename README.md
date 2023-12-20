@@ -21,6 +21,7 @@ As stated previously, this app features MongoDB, React, Javascript, Bootstrap, a
 ## Change Log
 
 Started Dec 2, 2023
+Finished with add and delete buttons Dec 13, 2023
 
 ## Credit and Collaborations
 
@@ -65,3 +66,23 @@ Start time: 11:30pm
 Finish time: 12:45pm
 
 Actual time needed to complete: 1 hr 15 min
+
+## Name of feature: Adding Books
+
+Estimate of time needed to complete: 1hr
+
+Start time: 9am
+
+Finish time: 11:35am
+
+Actual time needed to complete: 2hrs 35min
+
+## Name of feature: Deleting Books
+
+Estimate of time needed to complete: 45 min
+
+Start time: 3:30pm
+
+Finish time: 4:50pm
+
+Actual time needed to complete: 15 min
