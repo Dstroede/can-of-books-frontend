@@ -3,6 +3,7 @@ import Carousel from 'react-bootstrap/Carousel';
 import { Button }from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import CreateBook from './CreateBook';
+import EditBook from './EditBook';
 
 
 
@@ -12,9 +13,40 @@ class BestBooks extends React.Component {
     this.state = {
       books: [],
       isLoading: false,
+      showModal: false,
+      editedBook:{
+        _id: '',
+        title: '',
+        description: '',
+        status: '',
+      }
     }
   }
 
+  handleEditBook = (book) => {
+    console.log('Clicked Edit Book:', book);
+    this.setState({
+      showModal: true,
+      editedBook: {
+        _id: book._id || '',
+        title: book.title,
+        description: book.description,
+        status: book.status,
+      },
+    });
+  };
+
+  handleCloseModal = () => {
+    this.setState({
+        showModal: false,
+        editedBook:{
+            _id: '',
+            title: '',
+            description: '',
+            status: '',
+        },
+    });
+  }
 async componentDidMount(){
     try {
         let foundBooks = await fetch(`${import.meta.env.VITE_SERVER_URL}/books`);
@@ -53,6 +85,36 @@ async handleDeleteBook(bookId){
         this.setState({ isLoading: false })
     }
 }
+ 
+handleEditSubmit = async (updatedBook) => {
+    try {
+      const { _id, title, description, status } = updatedBook;
+      const updatedBookData = { title, description, status };
+  
+      let res = await fetch(`${import.meta.env.VITE_SERVER_URL}/books/${_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedBookData),
+      });
+        if (res.ok) {
+            const updatedBookData = await res.json();
+            this.setState((prevState) => ({
+                books: prevState.books.map((book) => 
+                book && updatedBookData && updatedBookData.updatedBook && book._id === updatedBookData.updatedBook._id
+                ? updatedBookData.updatedBook
+                : book
+                  ),
+            }));
+            this.handleCloseModal();
+        }else {
+            console.error('BestBooks.jsx- Failed to Update Book:', res.status )
+        }
+    } catch (error) {
+        console.error('BestBooks.jsx- Error Updating Book: ', error);
+    }
+};
 
 handleBookCreated = (newBook) => {
     this.setState((prevState)=> ({
@@ -83,6 +145,8 @@ handleBookCreated = (newBook) => {
                                     <p>{book.status}</p>
                                     <Button variant='danger' onClick={() => this.handleDeleteBook(book._id)} >
                                         Delete Book </Button>
+                                        <Button variant='secondary' onClick={() => this.handleEditBook(book)} >
+                                        Edit Book </Button>
                                 </Carousel.Caption>
                             </Carousel.Item>
                         ))}
@@ -91,6 +155,13 @@ handleBookCreated = (newBook) => {
                     <h3>No Books Found</h3>
                 )}
                 <CreateBook onBookCreated= {this.handleBookCreated}/>
+                {this.state.showModal && (
+                <EditBook 
+                  showModal={this.state.showModal}
+                  handleCloseModal={this.handleCloseModal}
+                  editedBook={this.state.editedBook}
+                  handleEditSubmit={this.handleEditSubmit}/>
+                  )}
             </>
         );
     }

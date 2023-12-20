@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, Form, Modal } from 'react-bootstrap';
 import axios from 'axios';
 
-class CreateBook extends React.Component {
+class EditBook extends React.Component {
     constructor(props) {
       super(props);
       this.state = {
@@ -23,42 +23,38 @@ class CreateBook extends React.Component {
     
     handleSubmit = async (e) => {
         e.preventDefault();
-    
         try {
-            let res = await axios.post('http://localhost:3001/books', this.state.books)
-            console.log('New Book Created:', res.data);
+            const { _id, title, description, status } = this.props.editedBook;
+            this.setState({
+                books: {
+                    _id,
+                    title: this.state.books.title || title,
+                    description: this.state.books.description || description,
+                    status: this.state.books.status || status,
+                },
+            });
 
-            this.setState((prevState) => ({
-                books: { ...prevState.books, res: res.data},
-            }));
-            this.props.onBookCreated(res.data);
-            this.handleCloseModal();
+
+            let res = await axios.put(`${import.meta.env.VITE_SERVER_URL}/books/${this.props.editedBook._id}`, this.state.books);
+            console.log('EditBook.jsx- Book Updated Successfully:', res.data);
+
+            this.props.handleEditSubmit(this.state.books);
+            this.props.handleCloseModal();
         } catch (error){
-            console.log('Error Creating Book:', error)
+            console.log('EditBook.jsx- Error Creating Book:', error)
         }
     };
-
-    handleShowModal = () => {
-        this.setState({ showModal: true });
-    }
-
-    handleCloseModal = () => {
-        this.setState({ showModal: false });
-    }
 
     render() {
           return (
               <>
-                  <Button variant="primary" onClick={ this.handleShowModal }>
-                    Add Book
-                  </Button>
 
-                  <Modal show={ this.state.showModal } onHide={ this.handleCloseModal } >
+                  <Modal show={ this.props.showModal } onHide={ this.handleCloseModal } >
                     <Modal.Header closeButton> 
-                    <Modal.Title>Add New Book</Modal.Title>
+                    <Modal.Title>Edit Book</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                  <Form onSubmit={ this.handleSubmit }>
+                  <Form onSubmit={(e) => this.handleSubmit(e)}>
                       <Form.Label>
                           Title:
                           <Form.Control
@@ -92,7 +88,7 @@ class CreateBook extends React.Component {
                           required />
                       </Form.Label>
   
-                      <Button type="submit">Create Book</Button>
+                      <Button type="submit">Update Book</Button>
                   </Form>
                   </Modal.Body>
                   </Modal>
@@ -101,4 +97,4 @@ class CreateBook extends React.Component {
       }
   }
   
-  export default CreateBook;
+  export default EditBook;
