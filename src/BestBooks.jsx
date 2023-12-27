@@ -25,6 +25,9 @@ class BestBooks extends React.Component {
       }
     }
   }
+ updateToken = (token) => {
+    this.setState({ token: token });
+ }
 
   handleEditBook = (book) => {
     console.log('Clicked Edit Book:', book);
@@ -177,7 +180,7 @@ render() {
             ) : (
               <h3>No Books Found</h3>
             )}
-            <CreateBook onBookCreated={this.handleBookCreated} />
+            <CreateBook onBookCreated={this.handleBookCreated} token={this.state.token} updateToken={this.updateToken} />
             {this.state.showModal && (
               <EditBook
                 showModal={this.state.showModal}

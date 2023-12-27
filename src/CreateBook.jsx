@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button, Form, Modal } from 'react-bootstrap';
 import axios from 'axios';
+import { withAuth0 } from '@auth0/auth0-react';
 
 class CreateBook extends React.Component {
     constructor(props) {
@@ -25,7 +26,14 @@ class CreateBook extends React.Component {
         e.preventDefault();
     
         try {
-            let res = await axios.post('http://localhost:3001/books', this.state.books)
+            let resToken = await this.props.auth0.getIdTokenClaims();
+            const token = resToken.__raw;
+            console.log('This is my token :', token)
+            this.props.updateToken(token)
+            let res = await axios.post(`${import.meta.env.VITE_SERVER_URL}/books`, this.state.books, {
+                headers: {
+                    'Authorization': `Bearer ${token}`},
+            }); 
             console.log('New Book Created:', res.data);
 
             this.setState((prevState) => ({
@@ -101,4 +109,4 @@ class CreateBook extends React.Component {
       }
   }
   
-  export default CreateBook;
+  export default withAuth0(CreateBook);
